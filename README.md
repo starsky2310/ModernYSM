@@ -1,10 +1,12 @@
 # 此项目是将OpenYSM移植到1.20.4的尝试
-移植的主要初衷，是因为我非常喜欢玩原版肉鸽地图《捕梦者》（版本 1.20.4，B站介绍：[https://www.bilibili.com/video/BV1Ctgd6oESB](https://www.bilibili.com/video/BV1Ctgd6oESB)），也曾为该地图贡献过部分代码。由于 1.20.4 版本的模组生态较为匮乏，加上官群里有玩家提过想在《捕梦者》中使用 YSM，便顺势进行了本次移植。
+
+移植的主要初衷，是因为我非常喜欢玩原版肉鸽地图《捕梦者》（版本 1.20.4，B站介绍：<https://www.bilibili.com/video/BV1Ctgd6oESB>），也曾为该地图贡献过部分代码。由于 1.20.4 版本的模组生态较为匮乏，加上官群里有玩家提过想在《捕梦者》中使用 YSM，便顺势进行了本次移植。\
 本项目仅为个人移植测试，不代表任何社区争吵中的站队立场。如有冒犯，还请多多包涵。
 
 # 以下为原始README
 
 # Farewell thoughts
+
 YSM已经官方开源，我们的目标已经达成，所以是时候收场了。
 
 **说好了要进行一场别样的迭代大战，现在怎么跑路了？**
@@ -42,7 +44,7 @@ YSM的团队看到开源版本蓬勃发展，各种改进与移植层出不穷�
 
 OpenYSM 是一款基于 [Yes Steve Model](https://modrinth.com/mod/yes-steve-model) 的模组，它修改了原版玩家模型，其核心使用 [GeckoLib](https://github.com/bernie-g/geckolib) 库，并采用了 Minecraft 基岩版的模型和动画文件。这使得玩家可以根据自己的喜好自定义玩家模型和动画。
 
-本项目基于LgeacyYSM，目标是提供一个完全开源、可自由修改和分发的替代品。 
+本项目基于LgeacyYSM，目标是提供一个完全开源、可自由修改和分发的替代品。
 本项目使用可选的C++库实现更快速的渲染，项目位于[OpenYSMDev/openysm.cpp](https://github.com/OpenYSMDev/openysm.cpp)
 
 ## 构建
