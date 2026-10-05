@@ -98,7 +98,8 @@ public final class GpuRenderPath {
         GlStateManager._activeTexture(GL13.GL_TEXTURE0);
         GlStateManager._bindTexture(modelTexId);
 
-        int ssbo = acquireBoneSsbo(mesh.boneCount * 144);
+        int boneSlot = acquireBoneSlot(mesh.boneCount * 144);
+        int ssbo = BONE_RING_IDS[boneSlot];
         GL15.glBindBuffer(GL43.GL_SHADER_STORAGE_BUFFER, ssbo);
         GL15.glBufferSubData(GL43.GL_SHADER_STORAGE_BUFFER, 0L, boneBuf);
         GL43.glBindBufferBase(GL43.GL_SHADER_STORAGE_BUFFER, BoneSkinShader.ssbo, ssbo);
@@ -144,6 +145,8 @@ public final class GpuRenderPath {
             }
         }
 
+        fenceBoneSlot(boneSlot);
+
         GL43.glBindBufferBase(GL43.GL_SHADER_STORAGE_BUFFER, BoneSkinShader.ssbo, 0);
         GL15.glBindBuffer(GL43.GL_SHADER_STORAGE_BUFFER, 0);
         GlStateManager._glUseProgram(0);
@@ -162,22 +165,33 @@ public final class GpuRenderPath {
     }
 
     // 骨骼数据环形缓冲：同一模型一帧内会被绘制多次（界面预览 + 网格按钮 + HUD/世界），
-    // 若共用一个 SSBO，后写的骨骼数据可能被仍在排队中的绘制读到，导致姿态互相抢用 → 严重闪烁。
-    // 用多个缓冲严格轮转，连续绘制各自使用不同存储，从根本上去掉这个竞争。
-    // 槽位懒分配：只有真正用到时才创建缓冲，未使用的槽位不占显存。
+    // 若共用一个 SSBO，后写的骨骼数据可能被仍在排队中的绘制读到，导致姿态互相抢用 → 闪烁/撕裂。
+    // 用多个缓冲严格轮转，连续绘制各自使用不同存储；槽位懒分配，未使用的槽位不占显存。
+    // 复用槽位前用 GL fence 等该槽位上一次绘制真正完成：不同设备驱动的命令队列深度不同，
+    // 队列较深的设备若不等待，CPU 会覆盖 GPU 仍在读取的骨骼数据 → 模型撕裂。
     private static final int BONE_RING_SIZE = 128;
     private static final int[] BONE_RING_IDS = new int[BONE_RING_SIZE];
     private static final int[] BONE_RING_CAPS = new int[BONE_RING_SIZE];
+    private static final long[] BONE_RING_FENCES = new long[BONE_RING_SIZE];
     private static int BONE_RING_COUNT = 0;
     private static int BONE_RING_CURSOR = 0;
 
-    private static int acquireBoneSsbo(int bytes) {
+    private static int acquireBoneSlot(int bytes) {
         int idx = BONE_RING_CURSOR;
         if (idx >= BONE_RING_COUNT) {
             BONE_RING_IDS[idx] = GlStateManager._glGenBuffers();
             BONE_RING_CAPS[idx] = 0;
             BONE_RING_COUNT = idx + 1;
         }
+
+        long fence = BONE_RING_FENCES[idx];
+        if (fence != 0L) {
+            // 等该槽位上一次绘制完成（最多等 1 秒；正常情况下早已完成，不会真的阻塞）。
+            GL32.glClientWaitSync(fence, GL32.GL_SYNC_FLUSH_COMMANDS_BIT, 1_000_000_000L);
+            GL32.glDeleteSync(fence);
+            BONE_RING_FENCES[idx] = 0L;
+        }
+
         if (BONE_RING_CAPS[idx] < bytes) {
             // 只扩当前槽位，其余槽位保持不动，避免影响 GPU 队列中尚未完成的绘制。
             GL15.glBindBuffer(GL43.GL_SHADER_STORAGE_BUFFER, BONE_RING_IDS[idx]);
@@ -186,7 +200,12 @@ public final class GpuRenderPath {
             BONE_RING_CAPS[idx] = bytes;
         }
         BONE_RING_CURSOR = (idx + 1) % BONE_RING_SIZE;
-        return BONE_RING_IDS[idx];
+        return idx;
+    }
+
+    // 绘制结束后为该槽位打一个 fence，下次复用它之前先等它完成。
+    private static void fenceBoneSlot(int idx) {
+        BONE_RING_FENCES[idx] = GL32.glFenceSync(GL32.GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     }
 
     private static void refreshLights() {

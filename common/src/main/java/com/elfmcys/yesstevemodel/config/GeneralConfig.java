@@ -104,7 +104,7 @@ public class GeneralConfig {
         builder.comment("If rendering errors occur, try turning on this.");
         USE_COMPATIBILITY_RENDERER = builder.define("UseCompatibilityRenderer", false);
         builder.comment("Test renderer.");
-        USE_GPU_RENDERER = builder.define("UseGpuRenderer", true);
+        USE_GPU_RENDERER = builder.define("UseGpuRenderer", false);
         LAZY_MODEL_LOADING = builder.define("LazyModelLoading", true);
         builder.comment("Always use client-only mode");
         FORCE_CLIENT_MODE = builder.define("ForceClientMode", false);
