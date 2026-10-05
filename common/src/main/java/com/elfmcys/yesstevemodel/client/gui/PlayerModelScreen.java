@@ -350,7 +350,7 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         this.searchBox.setValue(value);
         this.searchBox.setTextColor(15986656);
         this.searchBox.setFocused(zIsFocused);
-        this.searchBox.moveCursorToEnd();
+        this.searchBox.moveCursorToEnd(true);
         this.suggestions = new SearchSuggestions(this.font, this.searchBox, this.modelPackMap, this.suggestions);
         this.suggestions.refresh();
         addWidget(this.searchBox);
@@ -377,13 +377,10 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
                 navigateUp();
             }).setTooltipText("gui.back"));
         }
-        addRenderableWidget(new Checkbox(this.guiLeft + 5, this.guiTop - 22, 20, 20, Component.translatable("gui.yes_steve_model.show_model_id_first"), GeneralConfig.SHOW_MODEL_ID_FIRST.get(), true) {
-            public void onPress() {
-                super.onPress();
-                GeneralConfig.SHOW_MODEL_ID_FIRST.set(selected());
-                GeneralConfig.SHOW_MODEL_ID_FIRST.save();
-            }
-        });
+        addRenderableWidget(Checkbox.builder(Component.translatable("gui.yes_steve_model.show_model_id_first"), Minecraft.getInstance().font).pos(this.guiLeft + 5, this.guiTop - 22).selected(GeneralConfig.SHOW_MODEL_ID_FIRST.get()).onValueChange((checkbox, newValue) -> {
+            GeneralConfig.SHOW_MODEL_ID_FIRST.set(newValue);
+            GeneralConfig.SHOW_MODEL_ID_FIRST.save();
+        }).build());
         addRenderableWidget(new IconButton(this.guiLeft + 328, this.guiTop + 5, 18, 18, 32, 0, button4 -> {
             if (this.category != Category.ALL) {
                 this.category = Category.ALL;
@@ -469,8 +466,13 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         }
     }
 
+    @Override
+    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        // 20.2+ 基类会自动调用本方法叠加模糊背景，且发生在 UI 之上；背景改由 render() 开头显式绘制。
+    }
+
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics);
+        renderTransparentBackground(guiGraphics);
         guiGraphics.fillGradient(this.guiLeft, this.guiTop, this.guiLeft + 135, this.guiTop + 235, -14540254, -14540254);
         guiGraphics.fillGradient(this.guiLeft + 138, this.guiTop, this.guiLeft + 420, this.guiTop + 235, -14540254, -14540254);
         guiGraphics.fillGradient(this.guiLeft + 351, this.guiTop + 7, this.guiLeft + 352, this.guiTop + 21, -790560, -790560);
@@ -661,7 +663,9 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
             RenderSystem.enableScissor((int) ((this.guiLeft + 5) * guiScale), (int) (Minecraft.getInstance().getWindow().getHeight() - ((this.guiTop + 200) * guiScale)), (int) (125.0d * guiScale), (int) (171.0d * guiScale));
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate(0.0f, 0.0f, 100.0f);
-            InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, this.guiLeft + 67, this.guiTop + 190, 70, (this.guiLeft + 67) - mouseX, ((this.guiTop + 180) - 95) - mouseY, localPlayer);
+            // 1.20.4 的 renderEntityInInventoryFollowsMouse 会用该矩形自身开 scissor 并取矩形中心，
+            // 因此这里必须传入整个预览区域（与外层 scissor 一致），否则模型会被裁到一小块。
+            InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, this.guiLeft + 5, this.guiTop + 29, this.guiLeft + 130, this.guiTop + 200, 70, 0.0f, (float) mouseX, (float) mouseY, localPlayer);
             guiGraphics.pose().popPose();
             RenderSystem.disableScissor();
             PlayerCapability.get(localPlayer).ifPresent(cap -> {
@@ -687,10 +691,6 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         String value = this.searchBox.getValue();
         super.resize(minecraft, width, height);
         this.searchBox.setValue(value);
-    }
-
-    public void tick() {
-        this.searchBox.tick();
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -778,7 +778,7 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         }
         setFocused(this.searchBox);
         this.searchBox.setFocused(true);
-        this.searchBox.moveCursorToEnd();
+        this.searchBox.moveCursorToEnd(true);
     }
 
     private boolean handleToggleKey(int keyCode, int scanCode, int modifiers) {
@@ -797,17 +797,17 @@ public class PlayerModelScreen extends Screen implements IGuiWidget {
         }
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (this.minecraft == null) {
             return false;
         }
-        if (this.suggestions != null && this.suggestions.mouseScrolled(mouseX, mouseY, delta)) {
+        if (this.suggestions != null && this.suggestions.mouseScrolled(mouseX, mouseY, scrollY)) {
             return true;
         }
-        if (delta != 0.0d && isInModelArea(mouseX, mouseY)) {
-            return handleScrollPage(delta);
+        if (scrollY != 0.0d && isInModelArea(mouseX, mouseY)) {
+            return handleScrollPage(scrollY);
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     private boolean isInModelArea(double mouseX, double mouseY) {

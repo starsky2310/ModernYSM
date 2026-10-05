@@ -111,7 +111,7 @@ public final class NetworkHandler {
 
     public static void sendVersionCheck(Connection connection) {
         if (connection != null && connection.isConnected()) {
-            connection.send(toServerboundPacket(new C2SVersionCheckPacket()));
+            connection.send(toServerboundPacket(connection, new C2SVersionCheckPacket()));
         }
     }
 
@@ -131,15 +131,15 @@ public final class NetworkHandler {
         YSMChannel.sendToTrackingEntityAndSelf(obj, player);
     }
 
-    public static Packet<?> toClientboundPacket(Object obj) {
-        return YSMChannel.toClientboundPacket(obj);
+    public static Packet<?> toClientboundPacket(Connection connection, Object obj) {
+        return YSMChannel.toClientboundPacket(connection, obj);
     }
 
-    public static List<Packet<?>> toClientboundPackets(Object obj, UUID receiver) {
+    public static List<Packet<?>> toClientboundPackets(Connection connection, Object obj, UUID receiver) {
         if (!clientsSupportingModelSyncFragments.contains(receiver)) {
-            return List.of(YSMChannel.toClientboundPacket(obj));
+            return List.of(YSMChannel.toClientboundPacket(connection, obj));
         }
-        return YSMChannel.toClientboundPackets(obj);
+        return YSMChannel.toClientboundPackets(connection, obj);
     }
 
     public static void setClientSupportsModelSyncFragments(UUID uuid, boolean supported) {
@@ -154,7 +154,7 @@ public final class NetworkHandler {
         clientsSupportingModelSyncFragments.remove(uuid);
     }
 
-    public static Packet<?> toServerboundPacket(Object obj) {
-        return YSMChannel.toServerboundPacket(obj);
+    public static Packet<?> toServerboundPacket(Connection connection, Object obj) {
+        return YSMChannel.toServerboundPacket(connection, obj);
     }
 }

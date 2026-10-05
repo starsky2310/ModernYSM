@@ -1,7 +1,6 @@
 package rip.ysm.compat.immersivemelodies;
 
 import com.elfmcys.yesstevemodel.client.animation.molang.CtrlBinding;
-import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.world.entity.LivingEntity;
 
 public final class ImmersiveMelodiesCompat {
@@ -17,18 +16,18 @@ public final class ImmersiveMelodiesCompat {
     private ImmersiveMelodiesCompat() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return false;
     }
 
-    @ExpectPlatform
     public static void updateMelodyProgress(LivingEntity livingEntity, ImmersiveMelodiesData imData) {
-        throw new AssertionError();
     }
 
-    @ExpectPlatform
     public static void registerBindings(CtrlBinding binding) {
-        throw new AssertionError();
+        binding.livingEntityVar("im_pitch", ctx -> 0.0f);
+        binding.livingEntityVar("im_volume", ctx -> 0.0f);
+        binding.livingEntityVar("im_current", ctx -> 0.0f);
+        binding.livingEntityVar("im_delta", ctx -> 0L);
+        binding.livingEntityVar("im_time", ctx -> 0L);
     }
 }

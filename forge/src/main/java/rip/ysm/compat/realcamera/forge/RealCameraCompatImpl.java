@@ -1,5 +1,4 @@
 package rip.ysm.compat.realcamera.forge;
-import com.elfmcys.yesstevemodel.client.compat.realcamera.RealCameraCompat;
 
 public final class RealCameraCompatImpl {
 
@@ -7,10 +6,10 @@ public final class RealCameraCompatImpl {
     }
 
     public static boolean isLoaded() {
-        return RealCameraCompat.isLoaded();
+        return false;
     }
 
     public static boolean isActive() {
-        return RealCameraCompat.isActive();
+        return false;
     }
 }

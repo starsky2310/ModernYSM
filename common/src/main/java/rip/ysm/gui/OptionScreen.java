@@ -267,8 +267,11 @@ public abstract class OptionScreen extends Screen {
     }
 
     @Override
+    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    }
+
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        renderBackground(g);
+        renderTransparentBackground(g);
 
         renderPanelBackdrop(g);
 
@@ -526,21 +529,21 @@ public abstract class OptionScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         for (OptionRow<?> row : activeRows) {
-            if (row.isOverlayOpen() && row.overlayMouseScrolled(mouseX, mouseY, delta, rowScrollDisplay)) {
+            if (row.isOverlayOpen() && row.overlayMouseScrolled(mouseX, mouseY, scrollY, rowScrollDisplay)) {
                 return true;
             }
         }
         if (mouseX >= tabAreaLeft && mouseX < tabAreaRight && mouseY >= tabAreaTop && mouseY < tabAreaBottom) {
-            tabScrollOffset = Mth.clamp((int) (tabScrollOffset - delta * 20), 0, maxTabScroll);
+            tabScrollOffset = Mth.clamp((int) (tabScrollOffset - scrollY * 20), 0, maxTabScroll);
             return true;
         }
         if (mouseX >= rowAreaLeft && mouseX < rowAreaRight && mouseY >= rowAreaTop && mouseY < rowAreaBottom) {
-            rowScrollOffset = Mth.clamp((int) (rowScrollOffset - delta * 20), 0, maxRowScroll);
+            rowScrollOffset = Mth.clamp((int) (rowScrollOffset - scrollY * 20), 0, maxRowScroll);
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     private boolean isOnRowScrollbar(double mouseX, double mouseY) {

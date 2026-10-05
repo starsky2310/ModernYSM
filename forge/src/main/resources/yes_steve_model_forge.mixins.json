@@ -6,14 +6,9 @@
   "injectors": {
     "defaultRequire": 0
   },
+  "mixins": [
+    "ChannelAccessor"
+  ],
   "client": [
-    "client.create.PlayerSkyhookRendererAccessor",
-    "client.parcool.AnimationAccessor",
-    "client.parcool.DodgeAnimatorAccessor",
-    "client.parcool.FlippingAnimatorAccessor",
-    "client.parcool.HorizontalWallRunAnimatorAccessor",
-    "client.parcool.RollAnimatorAccessor",
-    "client.parcool.SpeedVaultAnimatorAccessor",
-    "client.parcool.WallJumpAnimatorAccessor"
   ]
 }

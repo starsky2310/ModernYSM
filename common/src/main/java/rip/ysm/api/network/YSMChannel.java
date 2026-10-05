@@ -1,6 +1,7 @@
 package rip.ysm.api.network;
 
 import dev.architectury.injectables.annotations.ExpectPlatform;
+import net.minecraft.network.Connection;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.resources.ResourceLocation;
@@ -53,17 +54,17 @@ public final class YSMChannel {
     }
 
     @ExpectPlatform
-    public static Packet<?> toClientboundPacket(Object packet) {
+    public static Packet<?> toClientboundPacket(Connection connection, Object packet) {
         throw new AssertionError();
     }
 
     @ExpectPlatform
-    public static List<Packet<?>> toClientboundPackets(Object packet) {
+    public static List<Packet<?>> toClientboundPackets(Connection connection, Object packet) {
         throw new AssertionError();
     }
 
     @ExpectPlatform
-    public static Packet<?> toServerboundPacket(Object packet) {
+    public static Packet<?> toServerboundPacket(Connection connection, Object packet) {
         throw new AssertionError();
     }
 }

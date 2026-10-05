@@ -1,7 +1,7 @@
 package rip.ysm.compat.bettercombat.forge;
 
 import com.elfmcys.yesstevemodel.client.animation.molang.CtrlBinding;
-import com.elfmcys.yesstevemodel.client.compat.bettercombat.BetterCombatCompat;
+import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 
 public final class BetterCombatCompatImpl {
 
@@ -9,10 +9,10 @@ public final class BetterCombatCompatImpl {
     }
 
     public static boolean isLoaded() {
-        return BetterCombatCompat.isLoaded();
+        return false;
     }
 
     public static void registerBindings(CtrlBinding binding) {
-        BetterCombatCompat.registerBindings(binding);
+        binding.clientPlayerEntityVar("bcombat_attack_animation", ctx -> StringPool.EMPTY);
     }
 }

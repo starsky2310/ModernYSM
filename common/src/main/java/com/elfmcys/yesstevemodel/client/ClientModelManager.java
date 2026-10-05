@@ -855,7 +855,7 @@ public class ClientModelManager {
             return;
         }
         try {
-            connection.send(NetworkHandler.toServerboundPacket(new C2SModelSyncPayload(byteBuffer)));
+            connection.send(NetworkHandler.toServerboundPacket(connection, new C2SModelSyncPayload(byteBuffer)));
         } catch (Exception e2) {
             e2.printStackTrace();
         }

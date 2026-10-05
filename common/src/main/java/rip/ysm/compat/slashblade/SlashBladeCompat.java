@@ -5,7 +5,7 @@ import com.elfmcys.yesstevemodel.client.entity.LivingAnimatable;
 import com.elfmcys.yesstevemodel.geckolib3.core.builder.ILoopType;
 import com.elfmcys.yesstevemodel.geckolib3.core.event.predicate.AnimationEvent;
 import com.elfmcys.yesstevemodel.geckolib3.core.enums.PlayState;
-import dev.architectury.injectables.annotations.ExpectPlatform;
+import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 
@@ -14,33 +14,27 @@ public final class SlashBladeCompat {
     private SlashBladeCompat() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return false;
     }
 
-    @ExpectPlatform
     public static boolean isSlashBladeItem(ItemStack itemStack) {
-        throw new AssertionError();
+        return false;
     }
 
-    @ExpectPlatform
     public static String getComboAnimName(AnimationEvent<? extends LivingAnimatable<?>> event) {
-        throw new AssertionError();
+        return "";
     }
 
-    @ExpectPlatform
     public static PlayState handleSlashBladeAnim(LivingEntity livingEntity, AnimationEvent<? extends LivingAnimatable<?>> event, String str, ILoopType loopType) {
-        throw new AssertionError();
+        return null;
     }
 
-    @ExpectPlatform
     public static void registerControllerFunctions(CtrlBinding ctrlBinding) {
-        throw new AssertionError();
+        ctrlBinding.livingEntityVar("slashblade_animation", it -> StringPool.EMPTY);
     }
 
-    @ExpectPlatform
     public static boolean hasNewApi() {
-        throw new AssertionError();
+        return false;
     }
 }

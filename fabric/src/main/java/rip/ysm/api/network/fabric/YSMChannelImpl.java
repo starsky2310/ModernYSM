@@ -125,11 +125,11 @@ public final class YSMChannelImpl {
         }
     }
 
-    public static Packet<?> toClientboundPacket(Object packet) {
+    public static Packet<?> toClientboundPacket(Connection connection, Object packet) {
         return ServerPlayNetworking.createS2CPacket(channelId, encode(packet));
     }
 
-    public static List<Packet<?>> toClientboundPackets(Object packet) {
+    public static List<Packet<?>> toClientboundPackets(Connection connection, Object packet) {
         byte[] encoded = copyAndRelease(encode(packet));
         if (encoded.length <= FRAGMENT_DATA_SIZE) {
             return List.of(ServerPlayNetworking.createS2CPacket(channelId, new FriendlyByteBuf(Unpooled.wrappedBuffer(encoded))));
@@ -151,7 +151,7 @@ public final class YSMChannelImpl {
         return packets;
     }
 
-    public static Packet<?> toServerboundPacket(Object packet) {
+    public static Packet<?> toServerboundPacket(Connection connection, Object packet) {
         if (FabricLoader.getInstance().getEnvironmentType() != EnvType.CLIENT) {
             throw new IllegalStateException("toServerboundPacket can only be invoked from the client environment");
         }

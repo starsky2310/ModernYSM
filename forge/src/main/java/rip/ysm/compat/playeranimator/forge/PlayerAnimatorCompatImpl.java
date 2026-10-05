@@ -1,7 +1,6 @@
 package rip.ysm.compat.playeranimator.forge;
 
 import net.minecraft.client.player.AbstractClientPlayer;
-import com.elfmcys.yesstevemodel.client.compat.playeranimator.PlayerAnimatorCompat;
 
 public final class PlayerAnimatorCompatImpl {
 
@@ -9,10 +8,10 @@ public final class PlayerAnimatorCompatImpl {
     }
 
     public static boolean isLoaded() {
-        return PlayerAnimatorCompat.isLoaded();
+        return false;
     }
 
     public static boolean isPlayerAnimated(AbstractClientPlayer abstractClientPlayer) {
-        return PlayerAnimatorCompat.isPlayerAnimated(abstractClientPlayer);
+        return false;
     }
 }

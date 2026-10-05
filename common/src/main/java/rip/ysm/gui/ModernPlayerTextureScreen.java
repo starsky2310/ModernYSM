@@ -375,12 +375,12 @@ public class ModernPlayerTextureScreen extends OptionScreen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (isInPreview(mouseX, mouseY)) {
-            zoom = Mth.clamp((float) (zoom * (1.0 + delta * 0.1)), 18.0f, 360.0f);
+            zoom = Mth.clamp((float) (zoom * (1.0 + scrollY * 0.1)), 18.0f, 360.0f);
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     private boolean isInPreview(double mouseX, double mouseY) {

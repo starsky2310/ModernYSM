@@ -38,6 +38,9 @@ public class NativeModelRenderer {
         RenderSystem.getProjectionMatrix().mul(RenderSystem.getModelViewMatrix(), projectionModelViewMatrix);
         boolean isPreview = ModelPreviewRenderer.isPreview() || ModelPreviewRenderer.isExtraPlayer();
 
+        // 说明：同一模型一帧内可能被绘制多次（界面预览 + 网格按钮 + HUD + 世界），
+        // GpuRenderPath 内部用环形骨骼缓冲为每次绘制分配独立存储来避免数据竞争（即早前的闪烁根因）。
+        // 世界里的模型同样走 GPU 路径（无配置项，始终启用）。
         if (textureLocation != null && NativeLibLoader.isLoaded() && !GeneralConfig.USE_COMPATIBILITY_RENDERER.get() && GeneralConfig.USE_GPU_RENDERER.get()) {
 
             if(!GpuCapability.isAvailable())
@@ -47,14 +50,12 @@ public class NativeModelRenderer {
                 return;
             }
 
-            if (OculusCompat.isShaderPackInUse() && !isPreview) {
-                if (IrisRenderPath.tryRender(model, pose, boneParams, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, textureLocation)) {
-                    return;
-                }
-            } else {
-                if (GpuRenderPath.tryRender(model, pose, boneParams, stateBuffer, textureIndex, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, textureLocation)) {
-                    return;
-                }
+            boolean irisPath = OculusCompat.isShaderPackInUse() && !isPreview;
+            boolean gpuOk = irisPath
+                    ? IrisRenderPath.tryRender(model, pose, boneParams, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, textureLocation)
+                    : GpuRenderPath.tryRender(model, pose, boneParams, stateBuffer, textureIndex, renderPartMask, packedLight, packedOverlay, red, green, blue, alpha, textureLocation);
+            if (gpuOk) {
+                return;
             }
         }
 

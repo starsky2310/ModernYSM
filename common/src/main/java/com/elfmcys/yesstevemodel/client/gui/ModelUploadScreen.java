@@ -89,6 +89,9 @@ public class ModelUploadScreen extends Screen implements ModelUploadSession.List
     }
 
     @Override
+    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    }
+
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         g.fill(0, 0, this.width, this.height, 0xC0000000);
 

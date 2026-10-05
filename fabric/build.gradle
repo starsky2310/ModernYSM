@@ -40,15 +40,21 @@ dependencies {
     include "net.fabricmc.fabric-api:fabric-api:$rootProject.fabric_api_version"
     include "maven.modrinth:forge-config-api-port:$rootProject.forge_config_api_port_version"
 
-    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-base:5.2.3"
-    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-entity:5.2.3"
-    include "dev.onyxstudios.cardinal-components-api:cardinal-components-base:5.2.3"
-    include "dev.onyxstudios.cardinal-components-api:cardinal-components-entity:5.2.3"
+    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-base:5.4.0"
+    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-entity:5.4.0"
+    include "dev.onyxstudios.cardinal-components-api:cardinal-components-base:5.4.0"
+    include "dev.onyxstudios.cardinal-components-api:cardinal-components-entity:5.4.0"
 
     implementation "com.github.TartaricAlkaline:ImageStream:-SNAPSHOT"
     include "com.github.TartaricAlkaline:ImageStream:-SNAPSHOT"
 
-    modCompileOnly "maven.modrinth:iris:1.7.0+1.20.1-fabric"
+    modCompileOnly "maven.modrinth:iris:1.7.2+1.20.4"
+
+    // Forge Config API Port bundles nightconfig as jar-in-jar, so it is missing from the compile classpath.
+    // In a dev run the nested jars are not extracted, so the runtime dependencies are needed as well.
+    compileOnly "com.electronwill.night-config:core:3.6.6"
+    runtimeOnly "com.electronwill.night-config:core:3.6.6"
+    runtimeOnly "com.electronwill.night-config:toml:3.6.6"
 
     common(project(path: ':common', configuration: 'namedElements')) { transitive false }
     shadowBundle project(path: ':common', configuration: 'transformProductionFabric')

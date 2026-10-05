@@ -267,7 +267,7 @@ public class SearchSuggestions {
             searchBox.setFocused(false);
         } else {
             searchBox.setValue(entry.insertion);
-            searchBox.moveCursorToEnd();
+            searchBox.moveCursorToEnd(true);
         }
         suppress();
         lastInput = searchBox.getValue();

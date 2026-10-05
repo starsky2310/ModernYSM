@@ -1,5 +1,5 @@
 modLoader = "javafml"
-loaderVersion = "[47,)"
+loaderVersion = "[49,)"
 #issueTrackerURL = ""
 license = "MIT"
 
@@ -16,21 +16,21 @@ logoFile = "yesstevemodel.png"
 [[dependencies.yes_steve_model]]
 modId = "forge"
 mandatory = true
-versionRange = "[47,)"
+versionRange = "[49,)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.yes_steve_model]]
 modId = "minecraft"
 mandatory = true
-versionRange = "[1.20.1,)"
+versionRange = "[1.20.4,)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.yes_steve_model]]
 modId = "architectury"
 mandatory = true
-versionRange = "[9.2,)"
+versionRange = "[11,)"
 ordering = "AFTER"
 side = "BOTH"
 

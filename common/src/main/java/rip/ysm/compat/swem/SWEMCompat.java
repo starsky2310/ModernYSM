@@ -1,7 +1,7 @@
 package rip.ysm.compat.swem;
 
 import com.elfmcys.yesstevemodel.client.animation.molang.CtrlBinding;
-import dev.architectury.injectables.annotations.ExpectPlatform;
+import com.elfmcys.yesstevemodel.geckolib3.core.molang.util.StringPool;
 import net.minecraft.world.entity.LivingEntity;
 
 public final class SWEMCompat {
@@ -9,18 +9,16 @@ public final class SWEMCompat {
     private SWEMCompat() {
     }
 
-    @ExpectPlatform
     public static boolean isLoaded() {
-        throw new AssertionError();
+        return false;
     }
 
-    @ExpectPlatform
     public static String getHorseGaitName(LivingEntity livingEntity) {
-        throw new AssertionError();
+        return "";
     }
 
-    @ExpectPlatform
     public static void registerControllerFunctions(CtrlBinding ctrlBinding) {
-        throw new AssertionError();
+        ctrlBinding.livingEntityVar("swem_is_ride", ctx -> false);
+        ctrlBinding.livingEntityVar("swem_state", ctx -> StringPool.EMPTY);
     }
 }

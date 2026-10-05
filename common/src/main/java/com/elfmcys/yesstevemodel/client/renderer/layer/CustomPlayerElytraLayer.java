@@ -37,10 +37,10 @@ public class CustomPlayerElytraLayer extends GeoLayerRenderer<CustomPlayerEntity
         ItemStack stack = CosmeticArmorHelper.getElytraItem(entity);
         AnimatedGeoModel animatedGeoModel = entityLivingBaseIn.getCurrentModel();
         if (!stack.isEmpty() && animatedGeoModel != null && !animatedGeoModel.elytraBones().isEmpty() && (entity instanceof AbstractClientPlayer abstractClientPlayer)) {
-            if (abstractClientPlayer.isElytraLoaded() && abstractClientPlayer.getElytraTextureLocation() != null) {
-                cloakTextureLocation = abstractClientPlayer.getElytraTextureLocation();
-            } else if (abstractClientPlayer.isCapeLoaded() && abstractClientPlayer.getCloakTextureLocation() != null && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE)) {
-                cloakTextureLocation = abstractClientPlayer.getCloakTextureLocation();
+            if (abstractClientPlayer.getSkin().elytraTexture() != null) {
+                cloakTextureLocation = abstractClientPlayer.getSkin().elytraTexture();
+            } else if (abstractClientPlayer.getSkin().capeTexture() != null && abstractClientPlayer.isModelPartShown(PlayerModelPart.CAPE)) {
+                cloakTextureLocation = abstractClientPlayer.getSkin().capeTexture();
             } else {
                 cloakTextureLocation = WINGS_LOCATION;
             }

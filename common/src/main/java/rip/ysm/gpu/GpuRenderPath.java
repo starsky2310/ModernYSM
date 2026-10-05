@@ -72,12 +72,19 @@ public final class GpuRenderPath {
         boneBuf.position(0);
         boneBuf.limit(mesh.boneCount * 144);
 
+        drawNow(mesh, boneBuf, projScratch, model.isTranslucentTexture(textureIndex), renderPartMask, packedOverlay, r, g, b, a, textureLocation);
+        return true;
+    }
+
+    private static void drawNow(GpuMesh mesh, ByteBuffer boneBuf, float[] projScratch, boolean translucent, int renderPartMask, int packedOverlay, float r, float g, float b, float a, ResourceLocation textureLocation) {
+        Minecraft mc = Minecraft.getInstance();
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
         RenderSystem.disableBlend();
+        GlStateManager._colorMask(true, true, true, true);
+        GlStateManager._depthFunc(GL11.GL_LEQUAL);
 
-        Minecraft mc = Minecraft.getInstance();
         AbstractTexture modelTex = mc.getTextureManager().getTexture(textureLocation);
         int modelTexId = modelTex.getId();
 
@@ -91,9 +98,10 @@ public final class GpuRenderPath {
         GlStateManager._activeTexture(GL13.GL_TEXTURE0);
         GlStateManager._bindTexture(modelTexId);
 
-        GL15.glBindBuffer(GL43.GL_SHADER_STORAGE_BUFFER, mesh.boneSsbo);
+        int ssbo = acquireBoneSsbo(mesh.boneCount * 144);
+        GL15.glBindBuffer(GL43.GL_SHADER_STORAGE_BUFFER, ssbo);
         GL15.glBufferSubData(GL43.GL_SHADER_STORAGE_BUFFER, 0L, boneBuf);
-        GL43.glBindBufferBase(GL43.GL_SHADER_STORAGE_BUFFER, BoneSkinShader.ssbo, mesh.boneSsbo);
+        GL43.glBindBufferBase(GL43.GL_SHADER_STORAGE_BUFFER, BoneSkinShader.ssbo, ssbo);
 
         float fogStart = RenderSystem.getShaderFogStart();
         float fogEnd = RenderSystem.getShaderFogEnd();
@@ -127,7 +135,7 @@ public final class GpuRenderPath {
             if (BoneSkinShader.locAlphaMode() >= 0) GL20.glUniform1i(BoneSkinShader.locAlphaMode(), 1);
             GL11.glDrawElements(GL11.GL_TRIANGLES, drawCount, GL11.GL_UNSIGNED_INT, offsetBytes);
 
-            if (model.isTranslucentTexture(textureIndex)) {
+            if (translucent) {
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
                 if (BoneSkinShader.locAlphaMode() >= 0) GL20.glUniform1i(BoneSkinShader.locAlphaMode(), 2);
@@ -143,9 +151,42 @@ public final class GpuRenderPath {
         com.mojang.blaze3d.vertex.BufferUploader.invalidate();
         GlStateManager._glBindVertexArray(0);
 
+        // 把渲染状态复位成实体渲染阶段 MC 期望的值，避免裸 GL 绘制后与渲染管线不同步。
         mc.gameRenderer.lightTexture().turnOffLightLayer();
+        GlStateManager._activeTexture(GL13.GL_TEXTURE0);
+        RenderSystem.enableCull();
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthMask(true);
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableBlend();
+    }
 
-        return true;
+    // 骨骼数据环形缓冲：同一模型一帧内会被绘制多次（界面预览 + 网格按钮 + HUD/世界），
+    // 若共用一个 SSBO，后写的骨骼数据可能被仍在排队中的绘制读到，导致姿态互相抢用 → 严重闪烁。
+    // 用多个缓冲严格轮转，连续绘制各自使用不同存储，从根本上去掉这个竞争。
+    // 槽位懒分配：只有真正用到时才创建缓冲，未使用的槽位不占显存。
+    private static final int BONE_RING_SIZE = 128;
+    private static final int[] BONE_RING_IDS = new int[BONE_RING_SIZE];
+    private static final int[] BONE_RING_CAPS = new int[BONE_RING_SIZE];
+    private static int BONE_RING_COUNT = 0;
+    private static int BONE_RING_CURSOR = 0;
+
+    private static int acquireBoneSsbo(int bytes) {
+        int idx = BONE_RING_CURSOR;
+        if (idx >= BONE_RING_COUNT) {
+            BONE_RING_IDS[idx] = GlStateManager._glGenBuffers();
+            BONE_RING_CAPS[idx] = 0;
+            BONE_RING_COUNT = idx + 1;
+        }
+        if (BONE_RING_CAPS[idx] < bytes) {
+            // 只扩当前槽位，其余槽位保持不动，避免影响 GPU 队列中尚未完成的绘制。
+            GL15.glBindBuffer(GL43.GL_SHADER_STORAGE_BUFFER, BONE_RING_IDS[idx]);
+            GL45.glBufferData(GL43.GL_SHADER_STORAGE_BUFFER, (long) bytes, GL15.GL_DYNAMIC_DRAW);
+            GL15.glBindBuffer(GL43.GL_SHADER_STORAGE_BUFFER, 0);
+            BONE_RING_CAPS[idx] = bytes;
+        }
+        BONE_RING_CURSOR = (idx + 1) % BONE_RING_SIZE;
+        return BONE_RING_IDS[idx];
     }
 
     private static void refreshLights() {

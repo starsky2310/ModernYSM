@@ -205,11 +205,15 @@ public class PlayerTextureScreen extends Screen {
         }
     }
 
+    @Override
+    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    }
+
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        renderTransparentBackground(guiGraphics);
         if (Minecraft.getInstance().player == null) {
             return;
         }
-        renderBackground(guiGraphics);
         guiGraphics.fillGradient(this.guiLeft, this.guiTop + 22, this.guiLeft + 90, this.guiTop + 235, -14540254, -14540254);
         guiGraphics.fillGradient(this.guiLeft + 93, this.guiTop, this.guiLeft + 299, this.guiTop + 235, -14540254, -14540254);
         guiGraphics.fillGradient(this.guiLeft + 302, this.guiTop, this.guiLeft + 420, this.guiTop + 235, -14540254, -14540254);
@@ -263,23 +267,23 @@ public class PlayerTextureScreen extends Screen {
         return true;
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (this.minecraft == null) {
             return false;
         }
-        if (delta != 0.0d) {
+        if (scrollY != 0.0d) {
             if (isInPreviewArea(mouseX, mouseY)) {
-                adjustZoom(((float) delta) * 0.07f);
+                adjustZoom(((float) scrollY) * 0.07f);
                 return true;
             }
             if (isInAnimationArea(mouseX, mouseY)) {
-                return scrollAnimationPage(delta);
+                return scrollAnimationPage(scrollY);
             }
             if (isInTextureArea(mouseX, mouseY)) {
-                return scrollTexturePage(delta);
+                return scrollTexturePage(scrollY);
             }
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     private boolean scrollTexturePage(double delta) {

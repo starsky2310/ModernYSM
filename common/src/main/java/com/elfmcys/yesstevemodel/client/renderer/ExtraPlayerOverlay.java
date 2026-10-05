@@ -1,6 +1,5 @@
 package com.elfmcys.yesstevemodel.client.renderer;
 
-import com.elfmcys.yesstevemodel.client.gui.ExtraPlayerRenderScreen;
 import com.elfmcys.yesstevemodel.config.ExtraPlayerRenderConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -13,7 +12,7 @@ public class ExtraPlayerOverlay implements HudOverlay {
     public void render(GuiGraphics guiGraphics, Font font, float partialTick, int screenWidth, int screenHeight) {
         Minecraft minecraft;
         LocalPlayer localPlayer;
-        if (ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.get() || (localPlayer = (minecraft = Minecraft.getInstance()).player) == null || (minecraft.screen instanceof ExtraPlayerRenderScreen)) {
+        if (ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER.get() || (localPlayer = (minecraft = Minecraft.getInstance()).player) == null || minecraft.screen != null) {
             return;
         }
         if (ExtraPlayerRenderConfig.DISABLE_PLAYER_RENDER_THIRD_PERSON.get() && minecraft.options != null && !minecraft.options.getCameraType().isFirstPerson()) {

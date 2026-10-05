@@ -1,5 +1,6 @@
 package rip.ysm.api.network.forge;
 
+import com.elfmcys.yesstevemodel.forge.mixin.ChannelAccessor;
 import com.elfmcys.yesstevemodel.mixin.ConnectionAccessor;
 import com.elfmcys.yesstevemodel.network.NetworkHandler;
 import com.elfmcys.yesstevemodel.network.message.C2SModelSyncPayload;
@@ -11,10 +12,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.ChannelBuilder;
 import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraftforge.network.SimpleChannel;
 import rip.ysm.api.network.PacketContext;
 import rip.ysm.api.network.PacketDirection;
 
@@ -23,6 +24,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public final class YSMChannelImpl {
@@ -43,61 +45,68 @@ public final class YSMChannelImpl {
     }
 
     public static void init(ResourceLocation channelId, String version) {
-        channel = NetworkRegistry.newSimpleChannel(channelId, () -> version, str -> true, str -> true);
-        channel.registerMessage(FRAGMENT_DISCRIMINATOR, FragmentPacket.class,
-                FragmentPacket::encode, FragmentPacket::decode,
-                (packet, ctxSupplier) -> {
-                    handleFragment(packet, new PacketContextImpl(ctxSupplier));
-                    ctxSupplier.get().setPacketHandled(true);
-                });
+        channel = ChannelBuilder.named(channelId)
+                .networkProtocolVersion(1)
+                .clientAcceptedVersions((status, remoteVersion) -> true)
+                .serverAcceptedVersions((status, remoteVersion) -> true)
+                .simpleChannel();
+        channel.messageBuilder(FragmentPacket.class, FRAGMENT_DISCRIMINATOR)
+                .encoder(FragmentPacket::encode)
+                .decoder(FragmentPacket::decode)
+                .consumerMainThread((packet, context) -> {
+                    handleFragment(packet, new PacketContextImpl(context));
+                    context.setPacketHandled(true);
+                })
+                .add();
     }
 
     public static <T> void register(int discriminator, Class<T> type, BiConsumer<T, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, T> decoder, BiConsumer<T, PacketContext> handler, PacketDirection direction) {
         codecs.put(discriminator & 0xff, new LocalCodec<>(type, decoder, handler, direction));
-        channel.registerMessage(discriminator, type, encoder, decoder,
-                (msg, ctxSupplier) -> {
-                    handler.accept(msg, new PacketContextImpl(ctxSupplier));
-                    ctxSupplier.get().setPacketHandled(true);
-                },
-                Optional.of(toForge(direction))
-        );
+        channel.messageBuilder(type, discriminator, toForge(direction))
+                .encoder(encoder)
+                .decoder(decoder)
+                .consumerMainThread((message, context) -> {
+                    handler.accept(message, new PacketContextImpl(context));
+                    context.setPacketHandled(true);
+                })
+                .add();
     }
 
     public static void sendToServer(Object packet) {
         if (packet instanceof C2SModelSyncPayload && NetworkHandler.serverSupportsModelSyncFragments()) {
             byte[] encoded = encode(packet);
             if (encoded.length > FRAGMENT_DATA_SIZE) {
-                sendFragments(encoded, channel::sendToServer);
+                sendFragments(encoded, fragment -> channel.send(fragment, PacketDistributor.SERVER.noArg()));
                 return;
             }
         }
-        channel.sendToServer(packet);
+        channel.send(packet, PacketDistributor.SERVER.noArg());
     }
 
     public static void sendToClientPlayer(Object packet, ServerPlayer player) {
-        channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
+        channel.send(packet, PacketDistributor.PLAYER.with(player));
     }
 
     public static void sendToAll(Object packet) {
-        channel.send(PacketDistributor.ALL.noArg(), packet);
+        channel.send(packet, PacketDistributor.ALL.noArg());
     }
 
     public static void sendToTrackingEntity(Object packet, Entity entity) {
-        channel.send(PacketDistributor.TRACKING_ENTITY.with(() -> entity), packet);
+        channel.send(packet, PacketDistributor.TRACKING_ENTITY.with(entity));
     }
 
     public static void sendToTrackingEntityAndSelf(Object packet, Player player) {
-        channel.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player), packet);
+        channel.send(packet, PacketDistributor.TRACKING_ENTITY_AND_SELF.with(player));
     }
 
-    public static Packet<?> toClientboundPacket(Object packet) {
-        return channel.toVanillaPacket(packet, NetworkDirection.PLAY_TO_CLIENT);
+    public static Packet<?> toClientboundPacket(Connection connection, Object packet) {
+        return ((ChannelAccessor) channel).ysm$toVanillaPacket(connection, packet);
     }
 
-    public static List<Packet<?>> toClientboundPackets(Object packet) {
+    public static List<Packet<?>> toClientboundPackets(Connection connection, Object packet) {
         byte[] encoded = encode(packet);
         if (encoded.length <= FRAGMENT_DATA_SIZE) {
-            return List.of(channel.toVanillaPacket(packet, NetworkDirection.PLAY_TO_CLIENT));
+            return List.of(toClientboundPacket(connection, packet));
         }
         List<Packet<?>> packets = new ArrayList<>();
         int transferId = nextTransferId.incrementAndGet();
@@ -106,13 +115,13 @@ public final class YSMChannelImpl {
             int from = index * FRAGMENT_DATA_SIZE;
             int to = Math.min(from + FRAGMENT_DATA_SIZE, encoded.length);
             FragmentPacket fragment = new FragmentPacket(transferId, index, fragmentCount, Arrays.copyOfRange(encoded, from, to));
-            packets.add(channel.toVanillaPacket(fragment, NetworkDirection.PLAY_TO_CLIENT));
+            packets.add(toClientboundPacket(connection, fragment));
         }
         return packets;
     }
 
-    public static Packet<?> toServerboundPacket(Object packet) {
-        return channel.toVanillaPacket(packet, NetworkDirection.PLAY_TO_SERVER);
+    public static Packet<?> toServerboundPacket(Connection connection, Object packet) {
+        return ((ChannelAccessor) channel).ysm$toVanillaPacket(connection, packet);
     }
 
     private static NetworkDirection toForge(PacketDirection direction) {
@@ -123,9 +132,8 @@ public final class YSMChannelImpl {
     }
 
     private static byte[] encode(Object packet) {
-        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        FriendlyByteBuf buf = channel.toBuffer(packet);
         try {
-            channel.encodeMessage(packet, buf);
             byte[] data = new byte[buf.readableBytes()];
             buf.readBytes(data);
             return data;
@@ -134,7 +142,7 @@ public final class YSMChannelImpl {
         }
     }
 
-    private static void sendFragments(byte[] encoded, java.util.function.Consumer<Object> sender) {
+    private static void sendFragments(byte[] encoded, Consumer<Object> sender) {
         int transferId = nextTransferId.incrementAndGet();
         int fragmentCount = (encoded.length + FRAGMENT_DATA_SIZE - 1) / FRAGMENT_DATA_SIZE;
         for (int index = 0; index < fragmentCount; index++) {

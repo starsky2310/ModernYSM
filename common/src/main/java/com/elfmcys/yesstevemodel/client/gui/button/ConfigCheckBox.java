@@ -7,6 +7,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.StateSwitchingButton;
+import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -26,7 +27,7 @@ public class ConfigCheckBox extends StateSwitchingButton implements ISpecialWidg
         super(x, y, width, 12, false);
         this.component2 = component;
         this.consumer2 = consumer;
-        initTextureValues(0, 0, 128, 12, location);
+        initTextureValues(new WidgetSprites(location, location));
     }
 
     public ConfigCheckBox(int x, int y, Component component, Consumer<Boolean> consumer) {

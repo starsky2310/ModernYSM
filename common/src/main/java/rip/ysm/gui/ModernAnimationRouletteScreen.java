@@ -381,8 +381,8 @@ public class ModernAnimationRouletteScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (delta < 0.0) nextPage(); else previousPage();
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (scrollY < 0.0) nextPage(); else previousPage();
         return true;
     }
 

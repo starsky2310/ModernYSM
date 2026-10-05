@@ -96,8 +96,8 @@ public class AuthorButton extends Button {
         }
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (delta > 0.0d) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (scrollY > 0.0d) {
             if (this.selectedContactIndex > 0) {
                 this.selectedContactIndex--;
                 renderTooltip(false);
@@ -105,7 +105,7 @@ public class AuthorButton extends Button {
             }
             return true;
         }
-        if (delta < 0.0d) {
+        if (scrollY < 0.0d) {
             if (this.selectedContactIndex < this.componentList.size() - 2) {
                 this.selectedContactIndex++;
                 renderTooltip(false);
@@ -113,7 +113,7 @@ public class AuthorButton extends Button {
             }
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     private void renderTooltip(boolean copied) {
